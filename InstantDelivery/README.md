@@ -4,7 +4,7 @@ Mod for Dyson Sphere Program. BepInEx required.
 
 Instantly delivery items from `Remote Supply` interstellar stations to `Remote Demand` interstellar stations.
 
-Basically the stations work as usual (find matching pairs, decide the amount to be sent), however now it requires no vessels and the cargo is delivered instantly. You can think of it as a station equipped with a vessel with infinite speed. Note it still consumes power and warpers, so it won't deliver cargos unless the related research has been unlocked, and the power/warper supply is satisfied. Just as in the original game.
+Basically the stations work as usual (find matching pairs, decide the amount to be sent), however now it requires no vessels and the cargo is delivered instantly. You can think of it as a station equipped with a vessel with infinite speed. Note it still consumes power and warpers, so it won't deliver cargos unless the related research has been unlocked, and the power/warper supply is satisfied. The station is also constrolled by options like Min Load of Vessels, and Transport Range of Vessels. Just as in the original game.
 
 - No vessels required
 - Supports Orbital Collectors
@@ -30,7 +30,7 @@ If you are using this mod in a new run with no exsiting vessels, you can set the
 
 瞬间将货物从`星际供应`物流站传送到`星际需求`站。
 
-Mod不会改变星际物流站的工作方式。尽管无需运输船，但星际物流站仍会消耗电力和翘曲器。你可以将此Mod理解为将星际物流站变为不需要运输船也能工作，且运送速度无限。
+Mod不会改变星际物流站的工作方式。尽管无需运输船，但星际物流站仍会消耗电力和翘曲器，而且受到运输船起送量、最远运送距离等选项控制。你可以将此Mod理解为将星际物流站变为不需要运输船也能工作，且运送速度无限。
 
 - 无需运输船
 - 支持轨道采集器
