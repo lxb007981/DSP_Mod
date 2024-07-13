@@ -37,12 +37,11 @@ namespace InstantDelivery
         {
             harmony.UnpatchSelf();
         }
-
         [HarmonyPrefix, HarmonyPatch(typeof(StationComponent), "InternalTickRemote")]
-        public static void InternalTickRemote_Prefix(ref StationComponent __instance, int timeGene, float shipSailSpeed, float shipWarpSpeed, int shipCarries, StationComponent[] gStationPool, AstroData[] astroPoses, int[] consumeRegister, ref bool __runOriginal)
+        public static void InternalTickRemote_Prefix(ref StationComponent __instance, PlanetFactory factory, int timeGene, float shipSailSpeed, float shipWarpSpeed, int shipCarries, StationComponent[] gStationPool, AstroData[] astroPoses, ref VectorLF3 relativePos, ref Quaternion relativeRot, bool starmap, int[] consumeRegister, ref bool __runOriginal)
         {
             __runOriginal = Configs.configEnableVessels;
-            bool flag = shipWarpSpeed > shipSailSpeed + 1f;
+            __instance.warperFree = DSPGame.IsMenuDemo;
             if (__instance.warperCount < __instance.warperMaxCount)
             {
                 StationStore[] obj = __instance.storage;
@@ -67,311 +66,285 @@ namespace InstantDelivery
             }
             int num4 = 0;
             int num5 = 0;
+            int itemId = 0;
             int num6 = 0;
             int num7 = 0;
             int num8 = 0;
-            int itemId = 0;
             int num9 = 0;
-            int num10 = 0;
-            int itemId2 = 0;
-            int num11 = 0;
-            int num12 = 0;
-            int num13 = 0;
-            int num14 = 0;
-            int num15 = 0;
-            int num16 = 0;
-            int num17 = 0;
-            if (timeGene == __instance.gene)
+            float num10 = shipSailSpeed / 600f;
+            float num11 = Mathf.Pow(num10, 0.4f);
+            float num12 = num11;
+            if (num12 > 1f)
             {
-                if (__instance.remotePairCount > 0)
-                {
-                    __instance.remotePairProcess %= __instance.remotePairCount;
-                    int num18 = __instance.remotePairProcess;
-                    SupplyDemandPair supplyDemandPair;
-                    StationComponent stationComponent;
-                    double num20;
-                    bool flag4;
-                    StationComponent stationComponent2;
-                    double num21;
-                    bool flag6;
-                    for (; ; )
-                    {
-                        int num19 = (shipCarries - 1) * __instance.deliveryShips / 100; //一车应当运走的量
-                        supplyDemandPair = __instance.remotePairs[__instance.remotePairProcess];
-                        if (supplyDemandPair.supplyId == __instance.gid)
-                        {
-                            StationStore[] objStorageStore = __instance.storage;
-                            lock (objStorageStore)
-                            {
-                                num4 = __instance.storage[supplyDemandPair.supplyIndex].max;
-                                num5 = __instance.storage[supplyDemandPair.supplyIndex].count;
-                                num6 = __instance.storage[supplyDemandPair.supplyIndex].inc;
-                                num7 = __instance.storage[supplyDemandPair.supplyIndex].remoteSupplyCount;
-                                num8 = __instance.storage[supplyDemandPair.supplyIndex].totalSupplyCount;
-                                itemId = __instance.storage[supplyDemandPair.supplyIndex].itemId;
-                            }
-                        }
-                        if (supplyDemandPair.supplyId == __instance.gid && num4 <= num19)
-                        {
-                            num19 = num4 - 1;
-                        }
-                        if (num19 < 0)
-                        {
-                            num19 = 0;
-                        }
-                        if (supplyDemandPair.supplyId == __instance.gid && num5 > num19 && num7 > num19 && num8 > num19)
-                        {
-                            stationComponent = gStationPool[supplyDemandPair.demandId];
-                            if (stationComponent != null)
-                            {
-                                num20 = (astroPoses[__instance.planetId].uPos - astroPoses[stationComponent.planetId].uPos).magnitude + (double)astroPoses[__instance.planetId].uRadius + (double)astroPoses[stationComponent.planetId].uRadius;
-                                bool flag3 = num20 < __instance.tripRangeShips;
-                                flag4 = (num20 >= __instance.warpEnableDist);
-                                if (__instance.warperNecessary && flag4 && (__instance.warperCount < 2 || !flag))
-                                {
-                                    flag3 = false;
-                                }
-                                if (flag3)
-                                {
-                                    StationStore[] objStorageStore = stationComponent.storage;
-                                    lock (objStorageStore)
-                                    {
-                                        num11 = stationComponent.storage[supplyDemandPair.demandIndex].remoteDemandCount;
-                                        num12 = stationComponent.storage[supplyDemandPair.demandIndex].totalDemandCount;
-                                    }
-                                }
-                                if (flag3 && num11 > 0 && num12 > 0)
-                                {
-                                    break;
-                                }
-                            }
-                        }
-                        if (supplyDemandPair.demandId == __instance.gid)
-                        {
-                            StationStore[] objStorageStore = __instance.storage;
-                            lock (objStorageStore)
-                            {
-                                num9 = __instance.storage[supplyDemandPair.demandIndex].remoteDemandCount;
-                                num10 = __instance.storage[supplyDemandPair.demandIndex].totalDemandCount;
-                            }
-                        }
-                        if (supplyDemandPair.demandId == __instance.gid && num9 > 0 && num10 > 0)
-                        {
-                            stationComponent2 = gStationPool[supplyDemandPair.supplyId];
-                            if (stationComponent2 != null)
-                            {
-                                num21 = (astroPoses[__instance.planetId].uPos - astroPoses[stationComponent2.planetId].uPos).magnitude + (double)astroPoses[__instance.planetId].uRadius + (double)astroPoses[stationComponent2.planetId].uRadius;
-                                bool flag5 = num21 < __instance.tripRangeShips;
-                                if (flag5 && !__instance.includeOrbitCollector && stationComponent2.isCollector)
-                                {
-                                    flag5 = false;
-                                }
-                                flag6 = (num21 >= __instance.warpEnableDist);
-                                if (__instance.warperNecessary && flag6 && (__instance.warperCount < 2 || !flag))
-                                {
-                                    flag5 = false;
-                                }
-                                StationStore[] objStorageStore = stationComponent2.storage;
-                                lock (objStorageStore)
-                                {
-                                    num13 = stationComponent2.storage[supplyDemandPair.supplyIndex].max;
-                                    num14 = stationComponent2.storage[supplyDemandPair.supplyIndex].count;
-                                    num15 = stationComponent2.storage[supplyDemandPair.supplyIndex].inc;
-                                    num16 = stationComponent2.storage[supplyDemandPair.supplyIndex].remoteSupplyCount;
-                                    num17 = stationComponent2.storage[supplyDemandPair.supplyIndex].totalSupplyCount;
-                                }
-                                if (num13 <= num19)
-                                {
-                                    num19 = num13 - 1;
-                                }
-                                if (num19 < 0)
-                                {
-                                    num19 = 0;
-                                }
-                                if (flag5 && num14 > num19 && num16 > num19 && num17 > num19)
-                                {
-                                    goto Block_47;
-                                }
-                            }
-                        }
-                        __instance.remotePairProcess++;
-                        __instance.remotePairProcess %= __instance.remotePairCount;
-                        if (num18 == __instance.remotePairProcess)
-                        {
-                            goto IL_1356;
-                        }
-                    }
-                    long num22 = __instance.CalcTripEnergyCost(num20, shipSailSpeed, flag);
-                    if (__instance.energy < num22)
-                    {
-                        goto IL_1356;
-                    }
-                    int num23 = (shipCarries < num5) ? shipCarries : num5;
-                    int num24 = num5;
-                    int num25 = num6;
-                    int num26 = __instance.split_inc(ref num24, ref num25, num23);
-                    if (flag4)
-                    {
-                        int[] obj2 = consumeRegister;
-                        lock (obj2)
-                        {
-                            if (__instance.warperCount >= 2)
-                            {
-                                __instance.warperCount -= 2;
-                                consumeRegister[1210] += 2;
-                            }
-                            else if (__instance.warperCount >= 1)
-                            {
-                                __instance.warperCount--;
-                                consumeRegister[1210]++;
-                            }
-                        }
-                    }
-                    StationStore[] objStorage = __instance.storage;
-                    lock (objStorage)
-                    {
-                        StationStore[] array7 = __instance.storage;
-                        int supplyIndex = supplyDemandPair.supplyIndex;
-                        array7[supplyIndex].count = array7[supplyIndex].count - num23;
-                        StationStore[] array8 = __instance.storage;
-                        int supplyIndex2 = supplyDemandPair.supplyIndex;
-                        array8[supplyIndex2].inc = array8[supplyIndex2].inc - num26;
-                    }
-                    gStationPool[stationComponent.gid].AddItem(itemId, num23, num26);
-                    __instance.energy -= num22;
-                    goto IL_1356;
+                num12 = Mathf.Log(num12) + 1f;
+            }
+            float num13 = num12;
+            if (num13 > 1f)
+            {
+                num13 = Mathf.Log(num13) + 1f;
+            }
+            if (num10 > 500f)
+            {
+                num10 = 500f;
+            }
+            ref AstroData ptr = ref astroPoses[__instance.planetId];
+            float num14 = shipSailSpeed * 0.03f;
+            float num15 = shipSailSpeed * 0.12f * num12;
+            float num16 = shipSailSpeed * 0.4f * num10;
+            float num17 = num11 * 0.006f + 1E-05f;
+            Vector3 vector = new Vector3(0f, 0f, 0f);
+            VectorLF3 vectorLF = new VectorLF3(0f, 0f, 0f);
+            double num18 = 0.0;
+            Quaternion uRot = new Quaternion(0f, 0f, 0f, 1f);
+            int j = 0;
+            while (j < __instance.workShipCount)
+            {
+                ref ShipData ptr2 = ref __instance.workShipDatas[j];
+                uRot.x = (uRot.y = (uRot.z = 0f));
+                uRot.w = 1f;
+                ref AstroData ptr4 = ref astroPoses[ptr2.planetB];
+                vectorLF.x = ptr.uPos.x - ptr4.uPos.x;
+                vectorLF.y = ptr.uPos.y - ptr4.uPos.y;
+                vectorLF.z = ptr.uPos.z - ptr4.uPos.z;
+                num18 = System.Math.Sqrt(vectorLF.x * vectorLF.x + vectorLF.y * vectorLF.y + vectorLF.z * vectorLF.z);
 
-                Block_47:
-                    long num31 = __instance.CalcTripEnergyCost(num21, shipSailSpeed, flag);
-                    if (!stationComponent2.isCollector && !stationComponent2.isVeinCollector)
+                ptr2.t = 0f;
+                StationComponent stationComponent = gStationPool[ptr2.otherGId];
+                StationStore[] array4 = stationComponent.storage;
+                if (num18 > __instance.warpEnableDist && ptr2.warperCnt == 0 && stationComponent.warperCount > 0)
+                {
+                    lock (consumeRegister)
                     {
-                        bool flag7 = false;
-                        __instance.remotePairProcess %= __instance.remotePairCount;
-                        int num32 = __instance.remotePairProcess + 1;
-                        int num33 = __instance.remotePairProcess;
-                        num32 %= __instance.remotePairCount;
-                        SupplyDemandPair supplyDemandPair2;
-                        for (; ; )
+                        ptr2.warperCnt++;
+                        stationComponent.warperCount--;
+                        consumeRegister[1210]++;
+                    }
+                }
+                if (ptr2.itemCount > 0)
+                {
+                    stationComponent.AddItem(ptr2.itemId, ptr2.itemCount, ptr2.inc);
+                    factory.NotifyShipDelivery(ptr2.planetA, __instance, ptr2.planetB, stationComponent, ptr2.itemId, ptr2.itemCount);
+                    ptr2.itemCount = 0;
+                    ptr2.inc = 0;
+                    if (__instance.workShipOrders[j].otherStationGId > 0)
+                    {
+                        StationStore[] obj = array4;
+                        lock (obj)
                         {
-                            supplyDemandPair2 = __instance.remotePairs[num32];
-                            if (supplyDemandPair2.supplyId == __instance.gid && supplyDemandPair2.demandId == stationComponent2.gid)
+                            if (array4[__instance.workShipOrders[j].otherIndex].itemId == __instance.workShipOrders[j].itemId)
                             {
-                                StationStore[] obj = __instance.storage;
-                                lock (obj)
-                                {
-                                    num5 = __instance.storage[supplyDemandPair2.supplyIndex].count;
-                                    num6 = __instance.storage[supplyDemandPair2.supplyIndex].inc;
-                                    num7 = __instance.storage[supplyDemandPair2.supplyIndex].remoteSupplyCount;
-                                    num8 = __instance.storage[supplyDemandPair2.supplyIndex].totalSupplyCount;
-                                    itemId = __instance.storage[supplyDemandPair2.supplyIndex].itemId;
-                                }
-                            }
-                            if (supplyDemandPair2.supplyId == __instance.gid && supplyDemandPair2.demandId == stationComponent2.gid)
-                            {
-                                StationStore[] obj = stationComponent2.storage;
-                                lock (obj)
-                                {
-                                    num11 = stationComponent2.storage[supplyDemandPair2.demandIndex].remoteDemandCount;
-                                    num12 = stationComponent2.storage[supplyDemandPair2.demandIndex].totalDemandCount;
-                                }
-                            }
-                            int num19 = (shipCarries - 1) * __instance.deliveryShips / 100;
-                            if (num19 < 0)
-                            {
-                                num19 = 0;
-                            }
-                            if (supplyDemandPair2.supplyId == __instance.gid && supplyDemandPair2.demandId == stationComponent2.gid && num5 >= num19 && num7 >= num19 && num8 >= num19 && num11 > 0 && num12 > 0)
-                            {
-                                break;
-                            }
-                            num32++;
-                            num32 %= __instance.remotePairCount;
-                            if (num33 == num32)
-                            {
-                                goto IL_F6C;
+                                StationStore[] array5 = array4;
+                                int otherIndex = __instance.workShipOrders[j].otherIndex;
+                                array5[otherIndex].remoteOrder = array5[otherIndex].remoteOrder - __instance.workShipOrders[j].otherOrdered;
                             }
                         }
-                        if (__instance.energy >= num31)
+                        __instance.workShipOrders[j].ClearOther();
+                    }
+                    if (__instance.remotePairTotalCount > 0)
+                    {
+                        int num77;
+                        int num78;
+                        if (__instance.routePriority == ERemoteRoutePriority.Prioritize)
                         {
-                            int num34 = (shipCarries < num5) ? shipCarries : num5;
-                            int num35 = num5;
-                            int num36 = num6;
-                            int num37 = __instance.split_inc(ref num35, ref num36, num34);
+                            num77 = 1;
+                            num78 = 5;
+                        }
+                        else if (__instance.routePriority == ERemoteRoutePriority.Only)
+                        {
+                            num77 = 1;
+                            num78 = 4;
+                        }
+                        else
+                        {
+                            num77 = 0;
+                            num78 = 0;
+                        }
+                        bool flag6 = true;
+                        for (int m = num77; m <= num78; m++)
+                        {
+                            int num79 = __instance.remotePairOffsets[m + 1] - __instance.remotePairOffsets[m];
+                            if (num79 > 0)
                             {
+                                int num80 = __instance.remotePairOffsets[m];
+                                __instance.remotePairProcesses[m] = __instance.remotePairProcesses[m] % num79;
+                                int num81 = __instance.remotePairProcesses[m];
+                                int num82 = __instance.remotePairProcesses[m];
+                                StationStore[] obj;
+                                SupplyDemandPair supplyDemandPair;
+                                for (;;)
+                                {
+                                    supplyDemandPair = __instance.remotePairs[num82 + num80];
+                                    if (supplyDemandPair.demandId != __instance.gid || supplyDemandPair.supplyId != stationComponent.gid)
+                                    {
+                                        goto IL_274F;
+                                    }
+                                    if ((int)__instance.priorityLocks[supplyDemandPair.demandIndex].priorityIndex < m && __instance.priorityLocks[supplyDemandPair.demandIndex].lockTick > 0)
+                                    {
+                                        num82++;
+                                        num82 %= num79;
+                                    }
+                                    else
+                                    {
+                                        if ((int)stationComponent.priorityLocks[supplyDemandPair.supplyIndex].priorityIndex >= m || stationComponent.priorityLocks[supplyDemandPair.supplyIndex].lockTick <= 0)
+                                        {
+                                            obj = __instance.storage;
+                                            lock (obj)
+                                            {
+                                                num4 = __instance.storage[supplyDemandPair.demandIndex].remoteDemandCount;
+                                                num5 = __instance.storage[supplyDemandPair.demandIndex].totalDemandCount;
+                                                itemId = __instance.storage[supplyDemandPair.demandIndex].itemId;
+                                            }
+                                            goto IL_274F;
+                                        }
+                                        num82++;
+                                        num82 %= num79;
+                                    }
+                                    IL_29EC:
+                                    if (num81 == num82)
+                                    {
+                                        break;
+                                    }
+                                    continue;
+                                    IL_274F:
+                                    if (supplyDemandPair.demandId == __instance.gid && supplyDemandPair.supplyId == stationComponent.gid)
+                                    {
+                                        obj = array4;
+                                        lock (obj)
+                                        {
+                                            num6 = array4[supplyDemandPair.supplyIndex].count;
+                                            num7 = array4[supplyDemandPair.supplyIndex].inc;
+                                            num8 = array4[supplyDemandPair.supplyIndex].remoteSupplyCount;
+                                            num9 = array4[supplyDemandPair.supplyIndex].totalSupplyCount;
+                                        }
+                                    }
+                                    if (supplyDemandPair.demandId == __instance.gid && supplyDemandPair.supplyId == stationComponent.gid)
+                                    {
+                                        if (num4 > 0 && num5 > 0)
+                                        {
+                                            if (num6 >= shipCarries && num8 >= shipCarries && num9 >= shipCarries)
+                                            {
+                                                goto Block_123;
+                                            }
+                                            stationComponent.SetPriorityLock(supplyDemandPair.supplyIndex, m);
+                                        }
+                                        else if (num6 <= shipCarries || num8 <= shipCarries || num9 <= shipCarries)
+                                        {
+                                            stationComponent.SetPriorityLock(supplyDemandPair.supplyIndex, m);
+                                        }
+                                    }
+                                    num82++;
+                                    num82 %= num79;
+                                    goto IL_29EC;
+                                }
+                                IL_29F5:
                                 if (flag6)
                                 {
-                                    int[] obj2 = consumeRegister;
-                                    lock (obj2)
-                                    {
-                                        if (__instance.warperCount >= 2)
-                                        {
-                                            __instance.warperCount -= 2;
-                                            consumeRegister[1210] += 2;
-                                        }
-                                        else if (__instance.warperCount >= 1)
-                                        {
-                                            __instance.warperCount--;
-                                            consumeRegister[1210]++;
-                                        }
-                                    }
+                                    goto IL_29FC;
                                 }
-                                StationStore[] obj = __instance.storage;
+                                break;
+                                Block_123:
+                                int num83 = (shipCarries < num6) ? shipCarries : num6;
+                                int num84 = num6;
+                                int num85 = num7;
+                                int num86 = __instance.split_inc(ref num84, ref num85, num83);
+                                ptr2.itemId = (__instance.workShipOrders[j].itemId = itemId);
+                                ptr2.itemCount = num83;
+                                ptr2.inc = num86;
+                                obj = array4;
                                 lock (obj)
                                 {
-                                    StationStore[] array13 = __instance.storage;
-                                    int supplyIndex3 = supplyDemandPair2.supplyIndex;
-                                    array13[supplyIndex3].count = array13[supplyIndex3].count - num34;
-                                    StationStore[] array14 = __instance.storage;
-                                    int supplyIndex4 = supplyDemandPair2.supplyIndex;
-                                    array14[supplyIndex4].inc = array14[supplyIndex4].inc - num37;
+                                    StationStore[] array6 = array4;
+                                    int supplyIndex = supplyDemandPair.supplyIndex;
+                                    array6[supplyIndex].count = array6[supplyIndex].count - num83;
+                                    StationStore[] array7 = array4;
+                                    int supplyIndex2 = supplyDemandPair.supplyIndex;
+                                    array7[supplyIndex2].inc = array7[supplyIndex2].inc - num86;
                                 }
-                                gStationPool[stationComponent2.gid].AddItem(itemId, num34, num37);
-                                __instance.energy -= num31;
-                                flag7 = true;
-                            }
-                        }
-                    IL_F6C:
-                        if (flag7)
-                        {
-                            goto IL_1356;
-                        }
-                    }
-                    if (__instance.energy >= num31)
-                    {
-                        {
-                            StationStore[] obj = __instance.storage;
-                            lock (obj)
-                            {
-                                itemId2 = __instance.storage[supplyDemandPair.demandIndex].itemId;
-                            }
-                            if (flag6)
-                            {
-                                int[] obj2 = consumeRegister;
-                                lock (obj2)
+                                __instance.workShipOrders[j].otherStationGId = stationComponent.gid;
+                                __instance.workShipOrders[j].thisIndex = supplyDemandPair.demandIndex;
+                                __instance.workShipOrders[j].otherIndex = supplyDemandPair.supplyIndex;
+                                __instance.workShipOrders[j].thisOrdered = num83;
+                                __instance.workShipOrders[j].otherOrdered = 0;
+                                obj = __instance.storage;
+                                lock (obj)
                                 {
-                                    if (__instance.warperCount >= 2)
-                                    {
-                                        __instance.warperCount -= 2;
-                                        consumeRegister[1210] += 2;
-                                    }
-                                    else if (__instance.warperCount >= 1)
-                                    {
-                                        __instance.warperCount--;
-                                        consumeRegister[1210]++;
-                                    }
+                                    StationStore[] array8 = __instance.storage;
+                                    int demandIndex = supplyDemandPair.demandIndex;
+                                    array8[demandIndex].remoteOrder = array8[demandIndex].remoteOrder + num83;
                                 }
+                                __instance.SetPriorityLock(supplyDemandPair.demandIndex, m);
+                                stationComponent.SetPriorityLock(supplyDemandPair.supplyIndex, m);
+                                flag6 = false;
+                                goto IL_29F5;
                             }
-                            int itemId3 = itemId2;
-                            int num102 = shipCarries;
-                            int inc;
-                            gStationPool[stationComponent2.gid].TakeItem(ref itemId3, ref num102, out inc);
-                            gStationPool[__instance.gid].AddItem(itemId2, num102, inc);
-                            __instance.energy -= num31;
+                            IL_29FC:;
                         }
                     }
-                IL_1356:
-                    __instance.remotePairProcess++;
-                    __instance.remotePairProcess %= __instance.remotePairCount;
+                }
+                else
+                {
+                    int itemId2 = ptr2.itemId;
+                    int num87 = shipCarries;
+                    int inc;
+                    stationComponent.TakeItem(ref itemId2, ref num87, out inc);
+                    ptr2.itemCount = num87;
+                    ptr2.inc = inc;
+                    StationStore[] obj;
+                    if (__instance.workShipOrders[j].otherStationGId > 0)
+                    {
+                        obj = array4;
+                        lock (obj)
+                        {
+                            if (array4[__instance.workShipOrders[j].otherIndex].itemId == __instance.workShipOrders[j].itemId)
+                            {
+                                StationStore[] array9 = array4;
+                                int otherIndex2 = __instance.workShipOrders[j].otherIndex;
+                                array9[otherIndex2].remoteOrder = array9[otherIndex2].remoteOrder - __instance.workShipOrders[j].otherOrdered;
+                            }
+                        }
+                        __instance.workShipOrders[j].ClearOther();
+                    }
+                    obj = __instance.storage;
+                    lock (obj)
+                    {
+                        if (__instance.storage[__instance.workShipOrders[j].thisIndex].itemId == __instance.workShipOrders[j].itemId && __instance.workShipOrders[j].thisOrdered != num87)
+                        {
+                            int num88 = num87 - __instance.workShipOrders[j].thisOrdered;
+                            StationStore[] array10 = __instance.storage;
+                            int thisIndex2 = __instance.workShipOrders[j].thisIndex;
+                            array10[thisIndex2].remoteOrder = array10[thisIndex2].remoteOrder + num88;
+                            RemoteLogisticOrder[] array11 = __instance.workShipOrders;
+                            int num89 = j;
+                            array11[num89].thisOrdered = array11[num89].thisOrdered + num88;
+                        }
+                    }
+                }
+                ptr2.direction = -1;
+            
+            
+
+                goto IL_2D4B;
+                IL_2EAB:
+                j++;
+                continue;
+                IL_2D4B:
+                goto IL_2EAB;
+            }
+            for (int n = 0; n < __instance.priorityLocks.Length; n++)
+            {
+                if (__instance.priorityLocks[n].priorityIndex >= 0)
+                {
+                    if (__instance.priorityLocks[n].lockTick > 0)
+                    {
+                        StationPriorityLock[] array12 = __instance.priorityLocks;
+                        int num90 = n;
+                        array12[num90].lockTick = (byte)(array12[num90].lockTick - 1);
+                    }
+                    else
+                    {
+                        __instance.priorityLocks[n].lockTick = 0;
+                        __instance.priorityLocks[n].priorityIndex = 0;
+                    }
                 }
             }
         }
