@@ -11,7 +11,6 @@ namespace InstantDelivery
         public const string __NAME__ = "InstantDelivery";
         public const string __GUID__ = "lxb007981.dsp." + __NAME__;
 
-        private ConfigEntry<bool> configMethod;
         Harmony harmony;
 
         public void Awake()
@@ -23,8 +22,7 @@ namespace InstantDelivery
                     "General",
                     "EnableVessels",
                     true,
-                    "Whether to enable sending out vessels as in the original game. Note setting this option to false will freeze vessels that have taken off.").Value;
-
+                    "Decide whether to allow sending out vessels as in the original game. Keep this setting enabled (true) to ensure compatibility with an existing game save.").Value;
             harmony.PatchAll(typeof(InstantDelivery));
         }
 
@@ -37,10 +35,67 @@ namespace InstantDelivery
         {
             harmony.UnpatchSelf();
         }
-        [HarmonyPrefix, HarmonyPatch(typeof(StationComponent), "InternalTickRemote")]
-        public static void InternalTickRemote_Prefix(ref StationComponent __instance, PlanetFactory factory, int timeGene, float shipSailSpeed, float shipWarpSpeed, int shipCarries, StationComponent[] gStationPool, AstroData[] astroPoses, ref VectorLF3 relativePos, ref Quaternion relativeRot, bool starmap, int[] consumeRegister, ref bool __runOriginal)
+
+        private static void SpeedUpShip(ref StationComponent __instance)
         {
-            __runOriginal = Configs.configEnableVessels;
+            int j = 0;
+            while (j < __instance.workShipCount)
+            {
+                ref ShipData ptr2 = ref __instance.workShipDatas[j];
+                if (ptr2.stage < -1)
+                {
+                    if (ptr2.direction > 0)
+                    {
+                        ptr2.t = 1.2f;
+                    }
+                    else
+                    {
+                        ptr2.t = -0.1f;
+                    }
+                }
+                else if (ptr2.stage == -1)
+                {
+                    if (ptr2.direction > 0)
+                    {
+                        ptr2.t = 1.1f;
+                    }
+                    else
+                    {
+                        ptr2.t = -0.2f;
+                    }
+                }
+                else if (ptr2.stage == 0)
+                {
+                    ptr2.t = 1f;
+                    ptr2.stage = ptr2.direction;
+                }
+                else if (ptr2.stage == 1)
+                {
+                    if (ptr2.direction > 0)
+                    {
+                        ptr2.t = -1f;
+                    }
+                    else
+                    {
+                        ptr2.t = 1.1f;
+                    }
+                }
+                else if (ptr2.direction > 0)
+                {
+                    ptr2.t = -0.2f;
+
+                }
+                else
+                {
+                    ptr2.t = 1.2f;
+                }
+
+                j++;
+            }
+        }
+
+        private static void TeleportShip(ref StationComponent __instance, PlanetFactory factory, int timeGene, float shipSailSpeed, float shipWarpSpeed, int shipCarries, StationComponent[] gStationPool, AstroData[] astroPoses, ref VectorLF3 relativePos, ref Quaternion relativeRot, bool starmap, int[] consumeRegister)
+        {
             __instance.warperFree = DSPGame.IsMenuDemo;
             if (__instance.warperCount < __instance.warperMaxCount)
             {
@@ -347,6 +402,20 @@ namespace InstantDelivery
                     }
                 }
             }
+        }
+
+        [HarmonyPrefix, HarmonyPatch(typeof(StationComponent), "InternalTickRemote")]
+        public static bool InternalTickRemote_Prefix(ref StationComponent __instance, PlanetFactory factory, int timeGene, float shipSailSpeed, float shipWarpSpeed, int shipCarries, StationComponent[] gStationPool, AstroData[] astroPoses, ref VectorLF3 relativePos, ref Quaternion relativeRot, bool starmap, int[] consumeRegister)
+        {
+            if (Configs.configEnableVessels)
+            {
+                SpeedUpShip(ref __instance);      
+            }
+            else
+            {
+                TeleportShip(ref __instance, factory, timeGene, shipSailSpeed, shipWarpSpeed, shipCarries, gStationPool, astroPoses, ref relativePos, ref relativeRot, starmap, consumeRegister);
+            }
+            return true;
         }
     }
 }
