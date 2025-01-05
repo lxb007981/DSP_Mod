@@ -1,7 +1,7 @@
 {
     "name": "InstantDelivery",
     "description": "Instantly delivery items from Remote Supply interstellar stations to Remote Demand interstellar stations./ 将货物从星际供应站瞬间传送到星际需求站",
-    "version_number": "1.1.0",
+    "version_number": "1.2.0",
     "dependencies": [],
     "website_url": "https://github.com/lxb007981/DSP_Mod/tree/master/InstantDelivery"
 }

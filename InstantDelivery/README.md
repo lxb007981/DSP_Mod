@@ -6,6 +6,8 @@ Instantly deliver items from `Remote Supply` interstellar stations to `Remote De
 
 Basically the stations work as usual (find matching pairs, find an available vessel, decide the amount to be sent), however now the cargo is delivered instantly. You can think of it as equipping vessel with infinite speed. Note it still consumes power and warpers, and requires at least one vessel to deliver, so it won't deliver cargos unless the related research has been unlocked, and the power/warper/vessel condition is satisfied. The station is also constrolled by options like Min Load of Vessels, and Transport Range of Vessels. Just as in the unmodded game.
 
+Now work with planetary logistics stations and drones. Requires the `SpeedUpDrones` option to be set to `true`.
+
 - **Behavior Changed!** Requires at least one vessel at the station.
 - Supports Orbital Collectors
 - Consumes power and warpers
@@ -29,6 +31,8 @@ You can find this option after running the game once with the mod installed, and
 
 Mod不会改变星际物流站的工作方式。星际物流站仍需要至少一艘运输船，并会消耗电力和翘曲器，而且受到运输船起送量、最远运送距离等选项控制。可以将此Mod理解为将运输船的速度变为无限大。
 
+现在可以对行星内物流站生效。需要打开`SpeedUpDrones`选项。
+
 - **与上版本不同！** 需要至少一艘运输船
 - 支持轨道采集器
 - 仍需消耗电力与翘曲器
@@ -48,6 +52,11 @@ Mod不会改变星际物流站的工作方式。星际物流站仍需要至少�
 如果此Mod被用在已有运输船运行的旧存档，则不应改动默认选项（true）。
 
 ## Release Notes
+
+### v1.2.0
+
+- Now work with planetary logistics stations and drones!. Requires the `SpeedUpDrones` option to be set to `true`.
+- 现在可以对行星内物流站生效。需要打开`SpeedUpDrones`选项。
 
 ### v1.1.0
 

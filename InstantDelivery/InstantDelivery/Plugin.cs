@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace InstantDelivery
 {
-    [BepInPlugin(__GUID__, __NAME__, "0.1.0")]
+    [BepInPlugin(__GUID__, __NAME__, "1.2.0")]
     public class InstantDelivery : BaseUnityPlugin
     {
         public const string __NAME__ = "InstantDelivery";
@@ -23,12 +23,18 @@ namespace InstantDelivery
                     "EnableVessels",
                     true,
                     "Decide whether to allow sending out vessels as in the original game. Keep this setting enabled (true) to ensure compatibility with an existing game save.").Value;
+            Configs.configSpeedUpDrones = Config.Bind<bool>(
+                    "General",
+                    "SpeedUpDrones",
+                    false,
+                    "Decide whether to also speed up drones.").Value;
             harmony.PatchAll(typeof(InstantDelivery));
         }
 
         public static class Configs
         {
             public static bool configEnableVessels = true;
+            public static bool configSpeedUpDrones = false;
         }
 
         public void OnDestroy()
@@ -226,7 +232,7 @@ namespace InstantDelivery
                                 int num82 = __instance.remotePairProcesses[m];
                                 StationStore[] obj;
                                 SupplyDemandPair supplyDemandPair;
-                                for (;;)
+                                for (; ; )
                                 {
                                     supplyDemandPair = __instance.remotePairs[num82 + num80];
                                     if (supplyDemandPair.demandId != __instance.gid || supplyDemandPair.supplyId != stationComponent.gid)
@@ -254,13 +260,13 @@ namespace InstantDelivery
                                         num82++;
                                         num82 %= num79;
                                     }
-                                    IL_29EC:
+                                IL_29EC:
                                     if (num81 == num82)
                                     {
                                         break;
                                     }
                                     continue;
-                                    IL_274F:
+                                IL_274F:
                                     if (supplyDemandPair.demandId == __instance.gid && supplyDemandPair.supplyId == stationComponent.gid)
                                     {
                                         obj = array4;
@@ -291,13 +297,13 @@ namespace InstantDelivery
                                     num82 %= num79;
                                     goto IL_29EC;
                                 }
-                                IL_29F5:
+                            IL_29F5:
                                 if (flag6)
                                 {
                                     goto IL_29FC;
                                 }
                                 break;
-                                Block_123:
+                            Block_123:
                                 int num83 = (shipCarries < num6) ? shipCarries : num6;
                                 int num84 = num6;
                                 int num85 = num7;
@@ -332,7 +338,7 @@ namespace InstantDelivery
                                 flag6 = false;
                                 goto IL_29F5;
                             }
-                            IL_29FC:;
+                        IL_29FC:;
                         }
                     }
                 }
@@ -375,14 +381,14 @@ namespace InstantDelivery
                     }
                 }
                 ptr2.direction = -1;
-            
-            
+
+
 
                 goto IL_2D4B;
-                IL_2EAB:
+            IL_2EAB:
                 j++;
                 continue;
-                IL_2D4B:
+            IL_2D4B:
                 goto IL_2EAB;
             }
             for (int n = 0; n < __instance.priorityLocks.Length; n++)
@@ -409,11 +415,42 @@ namespace InstantDelivery
         {
             if (Configs.configEnableVessels)
             {
-                SpeedUpShip(ref __instance);      
+                SpeedUpShip(ref __instance);
             }
             else
             {
                 TeleportShip(ref __instance, factory, timeGene, shipSailSpeed, shipWarpSpeed, shipCarries, gStationPool, astroPoses, ref relativePos, ref relativeRot, starmap, consumeRegister);
+            }
+            return true;
+        }
+
+        [HarmonyPrefix, HarmonyPatch(typeof(StationComponent), "InternalTickLocal")]
+        public static bool InternalTickLocal(ref StationComponent __instance, PlanetFactory factory, int timeGene, float power, float droneSpeed, int droneCarries, StationComponent[] stationPool)
+        {
+            for (int i = 0; i < __instance.workDroneCount; i++)
+            {
+                if (__instance.workDroneDatas[i].t > 0f && __instance.workDroneDatas[i].t < __instance.workDroneDatas[i].maxt)
+                {
+                    if (__instance.workDroneDatas[i].direction <= 0f)
+                    {
+                        __instance.workDroneDatas[i].t = -0.0001f;
+                    }
+                    else
+                    {
+                        __instance.workDroneDatas[i].t = __instance.workDroneDatas[i].maxt + 0.0001f;
+                    }
+                }
+                else
+                {
+                    if (__instance.workDroneDatas[i].direction >= 0f)
+                    {
+                        __instance.workDroneDatas[i].t = __instance.workDroneDatas[i].maxt + 1.51f;
+                    }
+                    else
+                    {
+                        __instance.workDroneDatas[i].t = -1.51f;
+                    }
+                }
             }
             return true;
         }
