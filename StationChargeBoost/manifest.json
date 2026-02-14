@@ -1,0 +1,7 @@
+{
+    "name": "StationChargeBoost",
+    "description": "Increases the maximum charge power for interstellar stations beyond the default limit.",
+    "version_number": "0.0.1",
+    "dependencies": [],
+    "website_url": "https://github.com/lxb007981/DSP_Mod/tree/master/StationChargeBoost"
+}
