@@ -10,7 +10,7 @@ namespace StationChargeBoost
     {
         public const string __NAME__ = "StationChargeBoost";
         public const string __GUID__ = "lxb007981.dsp." + __NAME__;
-        public const string __VERSION__ = "0.0.1";
+        public const string __VERSION__ = "0.0.2";
 
         Harmony harmony;
         public new static readonly BepInEx.Logging.ManualLogSource Logger =

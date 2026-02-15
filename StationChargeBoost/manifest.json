@@ -1,7 +1,7 @@
 {
     "name": "StationChargeBoost",
     "description": "Increases the maximum charge power for interstellar stations beyond the default limit. / 提高星际物流站的的最大充能功率上限",
-    "version_number": "0.0.1",
+    "version_number": "0.0.2",
     "dependencies": [],
     "website_url": "https://github.com/lxb007981/DSP_Mod/tree/master/StationChargeBoost"
 }
