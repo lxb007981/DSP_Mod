@@ -25,8 +25,8 @@ namespace StationChargeBoost
         {
             // Plugin startup logic
             harmony = new Harmony(__GUID__);
-            Configs.ConfigMaxChargePower = Config.Bind("General", "MaxChargePower", 1000, 
-                                               "The maximum charge power (mw) for stellar stations.").Value;
+            Configs.ConfigMaxChargePower = Config.Bind("General", "MaxChargePower", 1000,
+                                               "The maximum charge power (mw) for interstellar stations.").Value;
             Logger.LogInfo($"Plugin {__GUID__} is loaded!");
             harmony.PatchAll(typeof(StationChargeBoost));
         }
@@ -36,23 +36,64 @@ namespace StationChargeBoost
             harmony.UnpatchSelf();
         }
 
-        [HarmonyPrefix, HarmonyPatch(typeof(UIStationWindow), "OnMaxChargePowerSliderValueChange")]
-        public static void OnMaxChargePowerSliderValueChange_Prefix(ref UIStationWindow __instance, ref float value)
+        public static bool IsValidStellarStation(StationComponent sc)
         {
-            if (__instance.transport.stationPool[__instance.stationId].isStellar)
+            return sc != null && sc.entityId > 0 && !sc.isVeinCollector && !sc.isCollector && sc.isStellar;
+        }
+
+        [HarmonyPrefix, HarmonyPatch(typeof(UIStationWindow), "OnMaxChargePowerSliderValueChange")]
+        public static void UIStationWindow_OnMaxChargePowerSliderValueChange_Prefix(ref UIStationWindow __instance,
+                                                                                    ref float value)
+        {
+            StationComponent sc = __instance.transport.stationPool[__instance.stationId];
+            if (IsValidStellarStation(sc))
             {
                 value = 10 + (value - 10) * (Configs.ConfigMaxChargePower - 30) / 270;
             }
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(UIControlPanelStationInspector), "OnMaxChargePowerSliderValueChange")]
-        public static void OnMaxChargePowerSliderValueChange_Prefix(ref UIControlPanelStationInspector __instance,
-                                                                    ref float value)
+        public static void UIControlPanelStationInspector_OnMaxChargePowerSliderValueChange_Prefix(
+            ref UIControlPanelStationInspector __instance, ref float value)
         {
-            if (__instance.transport.stationPool[__instance.stationId].isStellar)
+            StationComponent sc = __instance.transport.stationPool[__instance.stationId];
+            if (IsValidStellarStation(sc))
             {
                 value = 10 + (value - 10) * (Configs.ConfigMaxChargePower - 30) / 270;
             }
-        }        
+        }
+
+        private static float ComputeSliderValue(long workEnergyPerTick)
+        {
+            return (float)((workEnergyPerTick / 50000.0 - 10) * 270 / (Configs.ConfigMaxChargePower - 30) + 10);
+        }
+
+        [HarmonyPostfix, HarmonyPatch(typeof(UIStationWindow), "OnStationIdChange")]
+        public static void UIStationWindow_OnStationIdChange_Postfix(ref UIStationWindow __instance)
+        {
+            if (__instance == null || __instance.factory == null || __instance.stationId == 0)
+            {
+                return;
+            }
+            StationComponent sc = __instance.transport.stationPool[__instance.stationId];
+            if (IsValidStellarStation(sc))
+            {
+                long workEnergyPerTick = __instance.powerSystem.consumerPool[sc.pcId].workEnergyPerTick;
+                __instance.maxChargePowerSlider.Set(ComputeSliderValue(workEnergyPerTick), false);
+            }
+        }
+
+        [HarmonyPostfix, HarmonyPatch(typeof(UIControlPanelStationInspector), "OnStationIdChange")]
+        public static void UIControlPanelStationInspector_OnStationIdChange_Postfix(
+            ref UIControlPanelStationInspector __instance)
+        {
+            StationComponent sc = __instance.transport.stationPool[__instance.stationId];
+            if (IsValidStellarStation(sc))
+            {
+                long workEnergyPerTick = __instance.powerSystem.consumerPool[sc.pcId].workEnergyPerTick;
+                __instance.maxChargePowerSlider.Set(ComputeSliderValue(workEnergyPerTick), false);
+            }
+        }
+
     }
 }
